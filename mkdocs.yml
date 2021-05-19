@@ -1,0 +1,61 @@
+# Meta
+site_name: VulkanTutorialCN
+site_description: Vulkan 中文教程，旨在为广大 Vulkan 爱好者提供 Vulkan 教程的中文支持、改善学习体验、扩大 Vulkan 在国内的影响力。
+site_author: VulkanTutorialCN
+copyright: ©2021-2021 Copyright VulkanTutorialCN Team
+
+# Theme
+theme:
+  name: material
+
+# GitHub
+repo_url: https://github.com/VulkanTutorialCN/VulkanTutorialCN
+repo_name: VulkanTutorialCN
+
+# Navs
+nav:
+  - '序言': 'index.md'
+  - '介绍': '00-introduction.md'
+  - '概览': '01-overview.md'
+  - '开发环境配置': '02-development-environment.md'
+  - '第一个三角形':
+    - '初始化':
+      - '基础代码': '03-drawing-a-triangle/01-setup/01-base-code.md'
+      - '实例': '03-drawing-a-triangle/01-setup/02-instance.md'
+      - '校验层': '03-drawing-a-triangle/01-setup/03-validation-layers.md'
+      - '物理设备和命令队列族': '03-drawing-a-triangle/01-setup/04-physical-devices-and-queue-families.md'
+      - '逻辑设备和命令队列': '03-drawing-a-triangle/01-setup/05-logical-device-and-queues.md'
+    - '显示':
+      - '窗口与绘图表面': '03-drawing-a-triangle/02-presentation/01-window-surface.md'
+      - '交换链': '03-drawing-a-triangle/02-presentation/02-swap-chain.md'
+      - '图像视图': '03-drawing-a-triangle/02-presentation/03-image-views.md'
+    - '绘制管线基础':
+      - '介绍': '03-drawing-a-triangle/03-graphics-pipeline-basics/01-introduction.md'
+      - '着色器模块': '03-drawing-a-triangle/03-graphics-pipeline-basics/02-shader-modules.md'
+      - '固定配置': '03-drawing-a-triangle/03-graphics-pipeline-basics/03-fixed-function.md'
+      - '渲染流程': '03-drawing-a-triangle/03-graphics-pipeline-basics/04-render-passes.md'
+      - '总结': '03-drawing-a-triangle/03-graphics-pipeline-basics/05-conclusion.md'
+    - '绘制':
+      - '帧缓冲': '03-drawing-a-triangle/04-drawing/01-frame-buffers.md'
+      - '命令缓冲': '03-drawing-a-triangle/04-drawing/02-command-buffers.md'
+      - '渲染与显示': '03-drawing-a-triangle/04-drawing/03-rendering-and-presentation.md'
+    - '交换链的重建': '03-drawing-a-triangle/05-swap-chain-recreation.md'
+  - '顶点缓冲':
+    - '顶点输入描述': '04-vertex-buffers/01-vertex-input-description.md'
+    - '创建顶点缓冲': '04-vertex-buffers/02-vertex-buffer-creation.md'
+    - '传输缓冲': '04-vertex-buffers/03-staging-buffer.md'
+    - '索引缓冲': '04-vertex-buffers/04-index-buffer.md'
+  - '着色器通讯缓冲':
+    - '描述符布局与缓冲': '05-uniform-buffers/01-descriptor-layout-and-buffer.md'
+    - '描述符池与描述符集': '05-uniform-buffers/02-descriptor-pool-and-sets.md'
+  - '纹理映射':
+    - '图像': '06-texture-mapping/01-images.md'
+    - '图像视图与采样器': '06-texture-mapping/02-image-view-and-sampler.md'
+    - '为着色器配置采样器': '06-texture-mapping/03-combined-image-sampler.md'
+  - '深度缓冲': '07-depth-buffering.md'
+  - '加载模型': '08-loading-models.md'
+  - '生成级联纹理': '09-generating-mipmaps.md'
+  - '多采样': '10-multi-sampling.md'
+  - 'FAQ': '11-faq.md'
+  - '隐私政策': '12-privacy-policy.md'
+  - '其他': '13-other.md'
