@@ -8,16 +8,10 @@ far, buffers do not automatically allocate memory for themselves. The work from
 the previous chapters has shown that the Vulkan API puts the programmer in
 control of almost everything and memory management is one of those things.
 
-Vulkan的缓冲是可以存储任意数据的可以被显卡设备读取的内存区域。可以用来存储顶点数据，也是接下来我们将要
-做的，也可以有其他用途，在接下里的章节里我们将会逐步介绍。和我们之前看到的其他Vulkan对象不同，我们需要手动
-分配它的内存。在之前我们也看到了Vulkan API几乎把所有的控制权交给程序员，其中，内存管理也是其中之一。
 ## Buffer creation
 
 Create a new function `createVertexBuffer` and call it from `initVulkan` right
 before `createCommandBuffers`.
-
-创建一个叫做 `createVertexBuffer` 的函数，然后在 `initVulkan` 函数中
-`createCommandBuffers` 函数调用之后调用它：
 
 ```c++
 void initVulkan() {
@@ -46,8 +40,6 @@ void createVertexBuffer() {
 
 Creating a buffer requires us to fill a `VkBufferCreateInfo` structure.
 
-和创建Vulkan其他对象一样，创建一个顶点缓冲需要填充`VkBufferCreateInfo`结构体。
-
 ```c++
 VkBufferCreateInfo bufferInfo{};
 bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -58,8 +50,6 @@ The first field of the struct is `size`, which specifies the size of the buffer
 in bytes. Calculating the byte size of the vertex data is straightforward with
 `sizeof`.
 
-成员变量`size`，用于指定所要创建缓冲所占字节的大小。可以直接通过`sizeof`函数来计算顶点数组所占的字节大小。
-
 ```c++
 bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 ```
@@ -69,9 +59,6 @@ buffer is going to be used. It is possible to specify multiple purposes using a
 bitwise or. Our use case will be a vertex buffer, we'll look at other types of
 usage in future chapters.
 
-成员变量`usage`，用于指定缓冲数据的使用目的。可以用位运算组合指定多种用途。当前我们将缓冲指定为存储
-顶点数据，在接下来的章节我们将看到其他使用目的。
-
 ```c++
 bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 ```
@@ -80,19 +67,11 @@ Just like the images in the swap chain, buffers can also be owned by a specific
 queue family or be shared between multiple at the same time. The buffer will
 only be used from the graphics queue, so we can stick to exclusive access.
 
-和交换链中的图像一样，缓冲可以被特定的队列族所拥有或者同时在多个族之间共享。当前缓冲只需要使用图形队列，
-我们指定为独享模式。
-
 The `flags` parameter is used to configure sparse buffer memory, which is not
 relevant right now. We'll leave it at the default value of `0`.
 
 We can now create the buffer with `vkCreateBuffer`. Define a class member to
 hold the buffer handle and call it `vertexBuffer`.
-
-成员变量`flags`用于配置缓冲的内存稀疏程度，我们将其设置为 `0`使用默认值。
-填写完结构体信息，我们就可以调用`vkCreateBuffer`函数来完成缓冲
-创建。我们定义一个类成员变量`vertexBuffer`来存储创建的缓冲的句柄。
-
 
 ```c++
 VkBuffer vertexBuffer;
@@ -115,11 +94,6 @@ void createVertexBuffer() {
 The buffer should be available for use in rendering commands until the end of
 the program and it does not depend on the swap chain, so we'll clean it up in
 the original `cleanup` function:
-
-缓冲对象在整个渲染程序中都是可被渲染指令们使用。它并不依赖交换链，也就是说交换链重建时，我们不需要重新创建
-缓冲。因此，我们需要在程序结束时，手动销毁创建的缓冲对象。
-
-
 
 ```c++
 void cleanup() {
@@ -146,11 +120,11 @@ vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
 The `VkMemoryRequirements` struct has three fields:
 
 * `size`: The size of the required amount of memory in bytes, may differ from
-  `bufferInfo.size`.
+`bufferInfo.size`.
 * `alignment`: The offset in bytes where the buffer begins in the allocated
-  region of memory, depends on `bufferInfo.usage` and `bufferInfo.flags`.
+region of memory, depends on `bufferInfo.usage` and `bufferInfo.flags`.
 * `memoryTypeBits`: Bit field of the memory types that are suitable for the
-  buffer.
+buffer.
 
 Graphics cards can offer different types of memory to allocate from. Each type
 of memory varies in terms of allowed operations and performance characteristics.
@@ -307,9 +281,9 @@ possible that writes to the buffer are not visible in the mapped memory yet.
 There are two ways to deal with that problem:
 
 * Use a memory heap that is host coherent, indicated with
-  `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`
+`VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`
 * Call `vkFlushMappedMemoryRanges` after writing to the mapped memory, and
-  call `vkInvalidateMappedMemoryRanges` before reading from the mapped memory
+call `vkInvalidateMappedMemoryRanges` before reading from the mapped memory
 
 We went for the first approach, which ensures that the mapped memory always
 matches the contents of the allocated memory. Do keep in mind that this may lead
