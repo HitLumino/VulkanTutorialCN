@@ -1,20 +1,10 @@
-## Introduction
-
-Buffers in Vulkan are regions of memory used for storing arbitrary data that can
-be read by the graphics card. They can be used to store vertex data, which we'll
-do in this chapter, but they can also be used for many other purposes that we'll
-explore in future chapters. Unlike the Vulkan objects we've been dealing with so
-far, buffers do not automatically allocate memory for themselves. The work from
-the previous chapters has shown that the Vulkan API puts the programmer in
-control of almost everything and memory management is one of those things.
+## 介绍
 
 Vulkan的缓冲是可以存储任意数据的可以被显卡设备读取的内存区域。可以用来存储顶点数据，也是接下来我们将要
 做的，也可以有其他用途，在接下里的章节里我们将会逐步介绍。和我们之前看到的其他Vulkan对象不同，我们需要手动
 分配它的内存。在之前我们也看到了Vulkan API几乎把所有的控制权交给程序员，其中，内存管理也是其中之一。
-## Buffer creation
 
-Create a new function `createVertexBuffer` and call it from `initVulkan` right
-before `createCommandBuffers`.
+## 创建缓冲
 
 创建一个叫做 `createVertexBuffer` 的函数，然后在 `initVulkan` 函数中
 `createCommandBuffers` 函数调用之后调用它：
@@ -44,8 +34,6 @@ void createVertexBuffer() {
 }
 ```
 
-Creating a buffer requires us to fill a `VkBufferCreateInfo` structure.
-
 和创建Vulkan其他对象一样，创建一个顶点缓冲需要填充`VkBufferCreateInfo`结构体。
 
 ```c++
@@ -54,20 +42,11 @@ bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 bufferInfo.size = sizeof(vertices[0]) * vertices.size();
 ```
 
-The first field of the struct is `size`, which specifies the size of the buffer
-in bytes. Calculating the byte size of the vertex data is straightforward with
-`sizeof`.
-
 成员变量`size`，用于指定所要创建缓冲所占字节的大小。可以直接通过`sizeof`函数来计算顶点数组所占的字节大小。
 
 ```c++
 bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 ```
-
-The second field is `usage`, which indicates for which purposes the data in the
-buffer is going to be used. It is possible to specify multiple purposes using a
-bitwise or. Our use case will be a vertex buffer, we'll look at other types of
-usage in future chapters.
 
 成员变量`usage`，用于指定缓冲数据的使用目的。可以用位运算组合指定多种用途。当前我们将缓冲指定为存储
 顶点数据，在接下来的章节我们将看到其他使用目的。
@@ -76,18 +55,8 @@ usage in future chapters.
 bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 ```
 
-Just like the images in the swap chain, buffers can also be owned by a specific
-queue family or be shared between multiple at the same time. The buffer will
-only be used from the graphics queue, so we can stick to exclusive access.
-
 和交换链中的图像一样，缓冲可以被特定的队列族所拥有或者同时在多个族之间共享。当前缓冲只需要使用图形队列，
 我们指定为独享模式。
-
-The `flags` parameter is used to configure sparse buffer memory, which is not
-relevant right now. We'll leave it at the default value of `0`.
-
-We can now create the buffer with `vkCreateBuffer`. Define a class member to
-hold the buffer handle and call it `vertexBuffer`.
 
 成员变量`flags`用于配置缓冲的内存稀疏程度，我们将其设置为 `0`使用默认值。
 填写完结构体信息，我们就可以调用`vkCreateBuffer`函数来完成缓冲
@@ -112,13 +81,8 @@ void createVertexBuffer() {
 }
 ```
 
-The buffer should be available for use in rendering commands until the end of
-the program and it does not depend on the swap chain, so we'll clean it up in
-the original `cleanup` function:
-
 缓冲对象在整个渲染程序中都是可被渲染指令们使用。它并不依赖交换链，也就是说交换链重建时，我们不需要重新创建
-缓冲。因此，我们需要在程序结束时，手动销毁创建的缓冲对象。
-
+缓冲。因此，我们需要在程序结束时，手动销毁创建的缓冲对象：
 
 
 ```c++
@@ -131,32 +95,23 @@ void cleanup() {
 }
 ```
 
-## Memory requirements
+## 内存需求
 
-The buffer has been created, but it doesn't actually have any memory assigned to
-it yet. The first step of allocating memory for the buffer is to query its
-memory requirements using the aptly named `vkGetBufferMemoryRequirements`
-function.
+缓冲创建好了，但是还没有分配内存。在实际分配内存之前，首先得通过`vkGetBufferMemoryRequirements`函数获取它的内存需求。
 
 ```c++
 VkMemoryRequirements memRequirements;
 vkGetBufferMemoryRequirements(device, vertexBuffer, &memRequirements);
 ```
 
-The `VkMemoryRequirements` struct has three fields:
+返回值`VkMemoryRequirements` 结构体有三个成员变量：
 
-* `size`: The size of the required amount of memory in bytes, may differ from
-  `bufferInfo.size`.
-* `alignment`: The offset in bytes where the buffer begins in the allocated
-  region of memory, depends on `bufferInfo.usage` and `bufferInfo.flags`.
-* `memoryTypeBits`: Bit field of the memory types that are suitable for the
-  buffer.
+* `size`: 所需内存字节大小，有可能和 `bufferInfo.size` 不同。
+* `alignment`: 缓冲在分配内存当中起始位置，取决于 `bufferInfo.usage` 和 `bufferInfo.flags` 。
+* `memoryTypeBits`: 适合该缓冲使用内存的位域。
 
-Graphics cards can offer different types of memory to allocate from. Each type
-of memory varies in terms of allowed operations and performance characteristics.
-We need to combine the requirements of the buffer and our own application
-requirements to find the right type of memory to use. Let's create a new
-function `findMemoryType` for this purpose.
+显卡可以提供不同的内存类型。不同的类型的内存在使用限制和性能表现上都会有所不同。需要我们结合缓冲的需求和程序
+需求，从而找到最适合的内存类型。所以我们先创建一个 `findMemoryType` 函数来统一做这件事。
 
 ```c++
 uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
@@ -164,22 +119,18 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 }
 ```
 
-First we need to query info about the available types of memory using
-`vkGetPhysicalDeviceMemoryProperties`.
+首先我们需要调用 `vkGetPhysicalDeviceMemoryProperties` Vulkan函数获取硬件可用的内存类型。
 
 ```c++
 VkPhysicalDeviceMemoryProperties memProperties;
 vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 ```
 
-The `VkPhysicalDeviceMemoryProperties` structure has two arrays `memoryTypes`
-and `memoryHeaps`. Memory heaps are distinct memory resources like dedicated
-VRAM and swap space in RAM for when VRAM runs out. The different types of memory
-exist within these heaps. Right now we'll only concern ourselves with the type
-of memory and not the heap it comes from, but you can imagine that this can
-affect performance.
+返回值 `VkPhysicalDeviceMemoryProperties` 结构体含有 `memoryTypes` 和 `memoryHeaps`这两个数组成员变量。
+Memory heaps 是一种特殊内存资源，有点像专用显存和显存用尽之后属于主内存的交换空间的那部分内存。关于两者之间的巨大差异暂且不表。
+我们先不关心内存的分配来源，只需要知道两者会引起性能差异即可。
 
-Let's first find a memory type that is suitable for the buffer itself:
+我们先获取适合缓冲的内存类型，操作如下：
 
 ```c++
 for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
@@ -191,21 +142,15 @@ for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
 throw std::runtime_error("failed to find suitable memory type!");
 ```
 
-The `typeFilter` parameter will be used to specify the bit field of memory types
-that are suitable. That means that we can find the index of a suitable memory
-type by simply iterating over them and checking if the corresponding bit is set
-to `1`.
+`typeFilter` 参数用于指定我们需要的内存类型的位域。我们只需要遍历可用内存类型数组，检测每个内存类型是否满足我们需要即可 (相应位域为
+1)。
 
-However, we're not just interested in a memory type that is suitable for the
-vertex buffer. We also need to be able to write our vertex data to that memory.
-The `memoryTypes` array consists of `VkMemoryType` structs that specify the heap
-and properties of each type of memory. The properties define special features
-of the memory, like being able to map it so we can write to it from the CPU.
-This property is indicated with `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT`, but we
-also need to use the `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT` property. We'll see
-why when we map the memory.
+但是，我们不仅仅关心内存类型是否满足顶点缓冲的需要，还需要把顶点数据写入该内存中。 `memoryTypes` 数组
+由 `VkMemoryType` 结构体组成位域。比如 `VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT` 使用此标志类型分配的内存可供主机访问。
+主机可以使用映射函数（`vkMapMemory()`）来访问其内容。我们还需要使用 `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`
+使能主机写入对设备可见或设备写入对主机可见。我们待会解释为什么映射内存的时候需要两者。
 
-We can now modify the loop to also check for the support of this property:
+修改代码，检测是否满足我们需要的内存类型：
 
 ```c++
 for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
@@ -215,16 +160,15 @@ for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
 }
 ```
 
-We may have more than one desirable property, so we should check if the result
-of the bitwise AND is not just non-zero, but equal to the desired properties bit
-field. If there is a memory type suitable for the buffer that also has all of
-the properties we need, then we return its index, otherwise we throw an
-exception.
+由于我们不只一个需要的内存属性，所以仅仅检测位与运算的结果是否非 0 是不够的，
+还需要检测它是否与我们需要的属性的位域完全相同，否则我们抛出异常。
 
-## Memory allocation
+## 内存分配
 
 We now have a way to determine the right memory type, so we can actually
 allocate the memory by filling in the `VkMemoryAllocateInfo` structure.
+
+确定好内存需求，接下来我们可以填写`VkMemoryAllocateInfo`结构体。
 
 ```c++
 VkMemoryAllocateInfo allocInfo{};
@@ -233,10 +177,7 @@ allocInfo.allocationSize = memRequirements.size;
 allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 ```
 
-Memory allocation is now as simple as specifying the size and type, both of
-which are derived from the memory requirements of the vertex buffer and the
-desired property. Create a class member to store the handle to the memory and
-allocate it with `vkAllocateMemory`.
+内存分配只需要填写好需要的内存大小和内存类型，然后调用 `vkAllocateMemory` 函数分配内存即可：
 
 ```c++
 VkBuffer vertexBuffer;
@@ -249,22 +190,16 @@ if (vkAllocateMemory(device, &allocInfo, nullptr, &vertexBufferMemory) != VK_SUC
 }
 ```
 
-If memory allocation was successful, then we can now associate this memory with
-the buffer using `vkBindBufferMemory`:
+如果内存分配成功，我们需要调用 `vkBindBufferMemory` 函数绑定顶点缓冲到该内存：
 
 ```c++
 vkBindBufferMemory(device, vertexBuffer, vertexBufferMemory, 0);
 ```
 
-The first three parameters are self-explanatory and the fourth parameter is the
-offset within the region of memory. Since this memory is allocated specifically
-for this the vertex buffer, the offset is simply `0`. If the offset is non-zero,
-then it is required to be divisible by `memRequirements.alignment`.
+函数的前三个参数非常直白，第四个参数是偏移值。这里我们将内存用作顶点缓冲，可以将其设置为 0。
+偏移值需要满足能够被 `memRequirements.alignment` 整除。
 
-Of course, just like dynamic memory allocation in C++, the memory should be
-freed at some point. Memory that is bound to a buffer object may be freed once
-the buffer is no longer used, so let's free it after the buffer has been
-destroyed:
+当然，和C++的动态内存分配一样，我们需要自行进行内存释放。当缓冲不再被使用时，需要将绑定的内存释放：
 
 ```c++
 void cleanup() {
@@ -274,24 +209,20 @@ void cleanup() {
     vkFreeMemory(device, vertexBufferMemory, nullptr);
 ```
 
-## Filling the vertex buffer
+## 填充顶点缓冲
 
-It is now time to copy the vertex data to the buffer. This is done by [mapping
-the buffer memory](https://en.wikipedia.org/wiki/Memory-mapped_I/O) into CPU
-accessible memory with `vkMapMemory`.
+现在我们可以将顶点数据拷贝到缓冲中。我们需要使用 `vkMapMemory` 函数将缓冲关联的
+内存映射到CPU可以访问的内存。
 
 ```c++
 void* data;
 vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
 ```
 
-This function allows us to access a region of the specified memory resource
-defined by an offset and size. The offset and size here are `0` and
-`bufferInfo.size`, respectively. It is also possible to specify the special
-value `VK_WHOLE_SIZE` to map all of the memory. The second to last parameter can
-be used to specify flags, but there aren't any available yet in the current API.
-It must be set to the value `0`. The last parameter specifies the output for the
-pointer to the mapped memory.
+`vkMapMemory` 函数允许我们通过给定的内存偏移和内存大小访问特定的内存资源。偏移值和内存值我们设为 0 和
+`bufferInfo.size` 。我们还可以使用 `VK_WHOLE_SIZE` 来映射整个申请的内存。函数的倒数第二个参数可以用来
+指定一个特殊的 flag 参数，但是目前的版本还没有可以使用的 flag 参数，必须设为 0 。最后的参数用于返回内存映射
+后的地址。
 
 ```c++
 void* data;
@@ -300,28 +231,25 @@ vkMapMemory(device, vertexBufferMemory, 0, bufferInfo.size, 0, &data);
 vkUnmapMemory(device, vertexBufferMemory);
 ```
 
-You can now simply `memcpy` the vertex data to the mapped memory and unmap it
-again using `vkUnmapMemory`. Unfortunately the driver may not immediately copy
-the data into the buffer memory, for example because of caching. It is also
-possible that writes to the buffer are not visible in the mapped memory yet.
-There are two ways to deal with that problem:
+现在可以用 `memcpy` 函数将顶点数据拷贝到已映射的内存，或者使用 `vkUnmapMemory` 函数取消映射。
+然而，驱动程序可能并不会及时将数据拷贝到缓冲关联的内存中，这是因为处理器缓存机制的存在。
+写入缓冲的数据对于映射的内存可能并不可见。目前有两个方法解决这个问题：
 
-* Use a memory heap that is host coherent, indicated with
-  `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT`
-* Call `vkFlushMappedMemoryRanges` after writing to the mapped memory, and
-  call `vkInvalidateMappedMemoryRanges` before reading from the mapped memory
+* 属性内存类型，保证内存可见的一致性 `VK_MEMORY_PROPERTY_HOST_COHERENT_BIT` 。
+* 在写入数据到映射的内存后，调用 `vkFlushMappedMemoryRanges` 函数。在读取映射的内存数据前
+  调用 `vkInvalidateMappedMemoryRanges` 函数。
 
 We went for the first approach, which ensures that the mapped memory always
 matches the contents of the allocated memory. Do keep in mind that this may lead
 to slightly worse performance than explicit flushing, but we'll see why that
 doesn't matter in the next chapter.
 
-Flushing memory ranges or using a coherent memory heap means that the driver will be aware of our writes to the buffer, but it doesn't mean that they are actually visible on the GPU yet. The transfer of data to the GPU is an operation that happens in the background and the specification simply [tells us](https://www.khronos.org/registry/vulkan/specs/1.0/html/vkspec.html#synchronization-submission-host-writes) that it is guaranteed to be complete as of the next call to `vkQueueSubmit`.
+我们使用第一种方法，以保证映射的内存匹配分配的内存。记住此方法比第二种方法对性能稍稍有些影响，但是在接下来
+的章节我们会看到这不重要。
 
-## Binding the vertex buffer
+## 绑定顶点缓冲
 
-All that remains now is binding the vertex buffer during rendering operations.
-We're going to extend the `createCommandBuffers` function to do that.
+拓展 `createCommandBuffers` 函数，使用顶点缓冲进行渲染操作：
 
 ```c++
 vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
@@ -333,20 +261,15 @@ vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
 vkCmdDraw(commandBuffers[i], static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 ```
 
-The `vkCmdBindVertexBuffers` function is used to bind vertex buffers to
-bindings, like the one we set up in the previous chapter. The first two
-parameters, besides the command buffer, specify the offset and number of
-bindings we're going to specify vertex buffers for. The last two parameters
-specify the array of vertex buffers to bind and the byte offsets to start
-reading vertex data from. You should also change the call to `vkCmdDraw` to pass
-the number of vertices in the buffer as opposed to the hardcoded number `3`.
+我们使用 `vkCmdBindVertexBuffers` 函数绑定顶点缓冲。第二个参数和第三个参数指定偏移值和我们要绑定的顶点
+缓冲的数量。最后两个参数指定需要绑定的顶点缓冲数组和顶点数在顶点缓冲中的偏移值数组。我们还需要修改
+ `vkCmdDraw` 函数，将顶点缓冲中的顶点数量替换之前硬编码的数字 3 。
 
-Now run the program and you should see the familiar triangle again:
+现在运行程序，我们可以再次看到三角形：
 
 ![](/images/triangle.png)
 
-Try changing the color of the top vertex to white by modifying the `vertices`
-array:
+通过改变顶点数组，修改颜色数据：
 
 ```c++
 const std::vector<Vertex> vertices = {
@@ -356,12 +279,14 @@ const std::vector<Vertex> vertices = {
 };
 ```
 
-Run the program again and you should see the following:
+再次运行程序，可以看到：
 
 ![](/images/triangle_white.png)
 
 In the next chapter we'll look at a different way to copy vertex data to a
 vertex buffer that results in better performance, but takes some more work.
+
+下一章节，我们将会介绍另一种高效传输顶点数据的方法。
 
 [C++ code](/code/18_vertex_buffer.cpp) /
 [Vertex shader](/code/17_shader_vertexbuffer.vert) /
